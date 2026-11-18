@@ -1,47 +1,41 @@
-## ----setup, include = FALSE---------------------------------------------------
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>", message = FALSE,
-                      warning = FALSE, dpi = 150, fig.width = 7,
-                      fig.height = 5.6, out.width = "100%",
-                      fig.align = "center")
-set.seed(2026)
+## ----options, include = FALSE-----------------------------------------------------------
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 6.5,
+                      fig.height = 4.5, fig.align = "center", dpi = 72)
+old_options <- options(digits = 3, width = 90)
+
+## ----fit--------------------------------------------------------------------------------
 library(lagdynamics)
-old_options <- options(digits = 3)
-has_ggplot2 <- requireNamespace("ggplot2", quietly = TRUE)
-
-## ----fit----------------------------------------------------------------------
 fit <- lsa(engagement)
-transitions(fit, significant = TRUE)
+transitions(fit, significant = TRUE, sort = "strength")
 
-## ----edge---------------------------------------------------------------------
-transitions(bootstrap_lsa(fit, R = 200)) |> head(4)   # resampling CIs
-transitions(certainty_lsa(fit)) |> head(4)            # analytic CIs
+## ----certainty--------------------------------------------------------------------------
+cert <- certainty_lsa(fit)
+cert
+transitions(cert)
 
-## ----forest, eval = has_ggplot2, fig.height = 6.5-----------------------------
-plot(bootstrap_lsa(fit, R = 200))
+## ----bootstrap--------------------------------------------------------------------------
+set.seed(2026)
+boot <- bootstrap_lsa(fit, R = 500)
+boot
+transitions(boot, significant = TRUE) |> head(4)
 
-## ----stability----------------------------------------------------------------
-transitions(stability_lsa(fit, R = 200)) |> head(4)
+## ----forest, fig.height = 5-------------------------------------------------------------
+plot(boot)
 
-## ----reliability--------------------------------------------------------------
-reliability_lsa(fit, R = 50)
+## ----stability--------------------------------------------------------------------------
+stab <- stability_lsa(fit, R = 200)
+stab
+transitions(stab)
 
-## ----permute------------------------------------------------------------------
-transitions(permute_lsa(fit, R = 200)) |> head(4)
+## ----reliability------------------------------------------------------------------------
+rel <- reliability_lsa(fit, R = 100)
+rel
+as.data.frame(rel, what = "summary")
 
-## ----group--------------------------------------------------------------------
-gfit <- lsa(group_regulation_long, actor = "Actor", action = "Action",
-            time = "Time", group = "Achiever")
-
-## ----compare------------------------------------------------------------------
-cmp <- compare_lsa(gfit, R = 500, adjust = "BH")
-cmp
-transitions(cmp, significant = TRUE) |> head(4)
-
-## ----barrel, eval = has_ggplot2, fig.height = 6.5-----------------------------
-plot(cmp)
-
-## ----bayes--------------------------------------------------------------------
-bayes_compare_lsa(gfit, seed = 1)
+## ----permute----------------------------------------------------------------------------
+perm <- permute_lsa(fit, R = 500)
+perm
+transitions(perm)
 
 ## ----cleanup, include = FALSE-------------------------------------------------
 options(old_options)

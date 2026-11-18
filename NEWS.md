@@ -1,3 +1,50 @@
+# lagdynamics 0.35.0
+
+This release collects all changes since the CRAN release 0.32.
+
+## Changes to results
+
+- `summary()` on a fit now returns a `summary.lsa` object instead of printing
+  the fit and its matrices. The object holds two tidy tables, a one-row
+  overview and a per-state activity table; it prints when shown, and
+  `as.data.frame(summary(fit), what = "nodes")` returns either table. Grouped
+  fits are unchanged (one row per group).
+- `transition_probabilities()` now returns a tidy data frame with columns
+  `from`, `to` and `prob` (one row per pair of states; grouped fits gain a
+  leading `group` column) instead of a matrix or a list of matrices.
+- `as.data.frame()` on `compare_lsa()` and `bayes_compare_lsa()` results gains
+  `what = "global"` for the omnibus test, and on `reliability_lsa()` results
+  `what = "summary"` for a one-row summary of the replicates.
+
+## Reliability and stability
+
+- `reliability_lsa()` and `stability_lsa()` now treat only the documented
+  degenerate case (a resample with no transitions) as a failed replicate; any
+  other error is reported to the caller. The number of failed replicates is
+  stored in the result (`n_failed`) and shown by `print()`.
+
+## Errors and output
+
+- User-facing errors are classed conditions: `lagdynamics_bad_input`,
+  `lagdynamics_needs_events`, `lagdynamics_no_transitions`,
+  `lagdynamics_unknown_engine`, `lagdynamics_unsupported_option`,
+  `lagdynamics_incompatible_fits`, `lagdynamics_missing_package` and
+  `lagdynamics_ipf_infeasible`, each also of class `lagdynamics_error`.
+- Console output and plot subtitles use ASCII replacements for the block
+  glyph, the superscript in G^2 and the middle dot when the session is not
+  UTF-8.
+- `transfer_entropy(seed = )` and `bayes_compare_lsa(seed = )` restore the
+  caller's random number stream on exit.
+
+## Documentation
+
+- New documentation structure. Vignettes: lag sequential analysis, lag
+  transition networks, evaluating transitions and comparing groups. Guides
+  (on the package website): a complete workflow, event logs and
+  interoperability, engines, lags and structural zeros, plotting, and
+  transfer entropy. Case studies: course engagement, regulation in high and
+  low achieving groups, and AI behaviour in programming sessions.
+
 # lagdynamics 0.32
 
 ## New features

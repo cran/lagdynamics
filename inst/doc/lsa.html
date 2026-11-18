@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Written by Mohammed Saqr and Sonsoles López-Pernas" />
+
+
+<title>Lag sequential analysis</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Lag sequential analysis</h1>
+<h4 class="author">Written by <a href="https://saqr.me">Mohammed
+Saqr</a> and <a href="https://sonsoles.me">Sonsoles
+López-Pernas</a></h4>
+
+
+<div id="TOC">
+<ul>
+<li><a href="#data" id="toc-data">Data</a></li>
+<li><a href="#the-lagged-contingency-table" id="toc-the-lagged-contingency-table">The lagged contingency
+table</a></li>
+<li><a href="#adjusted-residuals-and-yules-q" id="toc-adjusted-residuals-and-yules-q">Adjusted residuals and Yule’s
+Q</a></li>
+<li><a href="#fitting-the-model" id="toc-fitting-the-model">Fitting the
+model</a></li>
+<li><a href="#which-transitions-depart-from-chance" id="toc-which-transitions-depart-from-chance">Which transitions depart
+from chance</a></li>
+<li><a href="#is-the-table-as-a-whole-dependent" id="toc-is-the-table-as-a-whole-dependent">Is the table as a whole
+dependent</a></li>
+<li><a href="#states-and-starting-points" id="toc-states-and-starting-points">States and starting points</a></li>
+<li><a href="#a-summary-of-the-model" id="toc-a-summary-of-the-model">A
+summary of the model</a></li>
+<li><a href="#transition-probabilities" id="toc-transition-probabilities">Transition probabilities</a></li>
+<li><a href="#residual-heatmap" id="toc-residual-heatmap">Residual
+heatmap</a></li>
+<li><a href="#where-next" id="toc-where-next">Where next</a></li>
+<li><a href="#references" id="toc-references">References</a></li>
+</ul>
+</div>
+
+<p>Lag sequential analysis (LSA) studies the order in which categorical
+events occur (Sackett, 1979; Bakeman &amp; Gottman, 1997). A process is
+coded as a sequence of states, such as weekly engagement levels or the
+moves of a collaborative discussion, and the analysis asks whether one
+state is followed by another more often, or less often, than the base
+rates of the two states alone would predict. A transition that occurs
+more often than expected is a sequential regularity of the process; a
+transition that occurs less often is an avoidance. Neither can be read
+from frequencies alone: a frequent transition may only reflect two busy
+states, and a rare transition may still occur far more often than chance
+allows.</p>
+<p>The method reduces the data to a lagged contingency table and tests
+every cell of it against sequential independence, the model in which the
+next state carries no memory of the current one. The result is a set of
+tested transitions, each with a direction, a size, and a p-value,
+together with an omnibus test of the whole table.
+<code>lagdynamics</code> fits the model in one call, <code>lsa()</code>,
+and returns every part of it as a tidy data frame.</p>
+<div id="data" class="section level2">
+<h2>Data</h2>
+<p><code>engagement</code> records the weekly engagement state of 138
+students over 15 weeks, one row per student and one column per week.</p>
+<ul>
+<li><strong>Sequence:</strong> each row is one student’s sequence.</li>
+<li><strong>Order:</strong> the column order (weeks 1 to 15) orders the
+states.</li>
+<li><strong>State:</strong> each cell is <code>Active</code>,
+<code>Average</code>, or <code>Disengaged</code>; <code>NA</code> marks
+a missing week and is skipped rather than counted as a state.</li>
+</ul>
+<p>Two rows are missing in every week, so the model is fitted to 136
+sequences.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(lagdynamics)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">head</span>(engagement)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="co">#&gt;         1          2          3          4          5          6       7       8       9</span></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="co">#&gt; 1  Active Disengaged Disengaged Disengaged     Active     Active  Active  Active Average</span></span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="co">#&gt; 2 Average    Average    Average    Average    Average    Average Average Average Average</span></span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="co">#&gt; 3 Average     Active     Active     Active     Active     Active  Active  Active  Active</span></span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="co">#&gt; 4  Active     Active     Active     Active     Active    Average Average  Active  Active</span></span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a><span class="co">#&gt; 5  Active     Active     Active    Average     Active    Average  Active  Active  Active</span></span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a><span class="co">#&gt; 6 Average    Average Disengaged    Average Disengaged Disengaged Average Average Average</span></span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a><span class="co">#&gt;           10      11         12      13      14      15</span></span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a><span class="co">#&gt; 1     Active Average     Active    &lt;NA&gt;    &lt;NA&gt;    &lt;NA&gt;</span></span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a><span class="co">#&gt; 2     Active Average    Average Average Average Average</span></span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a><span class="co">#&gt; 3    Average  Active     Active  Active  Active  Active</span></span>
+<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a><span class="co">#&gt; 4     Active Average     Active Average  Active Average</span></span>
+<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a><span class="co">#&gt; 5 Disengaged  Active     Active  Active Average Average</span></span>
+<span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a><span class="co">#&gt; 6 Disengaged Average Disengaged Average Average Average</span></span></code></pre></div>
+</div>
+<div id="the-lagged-contingency-table" class="section level2">
+<h2>The lagged contingency table</h2>
+<p>Let the process visit <span class="math inline">\(K\)</span> states.
+At lag <span class="math inline">\(\ell\)</span>, every pair of
+positions <span class="math inline">\(\ell\)</span> steps apart within a
+sequence is one transition, and the transitions are tabulated in a <span class="math inline">\(K \times K\)</span> table whose cell <span class="math inline">\(O_{ij}\)</span> counts the occasions on which
+state <span class="math inline">\(i\)</span> was followed, <span class="math inline">\(\ell\)</span> positions later, by state <span class="math inline">\(j\)</span>. At lag 1 this is the table of
+immediate successors. Pairs never cross the boundary between two
+sequences, so the last week of one student and the first week of the
+next are not counted.</p>
+<p>Two descriptive quantities come directly from the table. The
+transitional probability <span class="math inline">\(P(j \mid i) =
+O_{ij} / R_i\)</span>, where <span class="math inline">\(R_i\)</span> is
+the row total, is the share of moves out of state <span class="math inline">\(i\)</span> that reach state <span class="math inline">\(j\)</span>; it describes where the process goes.
+The expected count under independence,</p>
+<p><span class="math display">\[E_{ij} = \frac{R_i \,
+C_j}{N},\]</span></p>
+<p>with <span class="math inline">\(C_j\)</span> the column total and
+<span class="math inline">\(N\)</span> the number of transitions, is the
+count the cell would reach if the next state were drawn from the base
+rates regardless of the current one.</p>
+</div>
+<div id="adjusted-residuals-and-yules-q" class="section level2">
+<h2>Adjusted residuals and Yule’s Q</h2>
+<p>The adjusted residual standardises the gap between the observed and
+the expected count (Haberman, 1973),</p>
+<p><span class="math display">\[z_{ij} = \frac{O_{ij} - E_{ij}}
+  {\sqrt{E_{ij}\,(1 - R_i/N)\,(1 - C_j/N)}},\]</span></p>
+<p>and is approximately standard normal under independence. A residual
+above 1.96 marks a transition that is over-represented at the 5% level,
+and a residual below -1.96 one that is under-represented. The residual
+is the evidential unit of LSA: it states how far a transition departs
+from chance on a common scale, whatever the base rates of its
+states.</p>
+<p>The residual is a test statistic, so it grows with the number of
+transitions. Yule’s Q is the matching effect size. For each cell the
+table is collapsed to a 2-by-2 table (from <span class="math inline">\(i\)</span> or not, to <span class="math inline">\(j\)</span> or not) with cells <span class="math inline">\(a = O_{ij}\)</span>, <span class="math inline">\(b\)</span>, <span class="math inline">\(c\)</span>, and <span class="math inline">\(d\)</span>, and</p>
+<p><span class="math display">\[Q_{ij} = \frac{ad - bc}{ad +
+bc},\]</span></p>
+<p>which lies between -1 (the transition never occurs) and 1 (state
+<span class="math inline">\(i\)</span> is always followed by state <span class="math inline">\(j\)</span>), with 0 at independence. Because it
+does not grow with sample size, Q is the scale on which transitions of
+different data sets or groups are compared (Bakeman &amp; Quera,
+2011).</p>
+</div>
+<div id="fitting-the-model" class="section level2">
+<h2>Fitting the model</h2>
+<p><code>lsa()</code> takes the wide data frame directly: rows are
+sequences and columns are ordered positions. The default is the
+classical engine at lag 1.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">lsa</span>(engagement)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>fit</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="co">#&gt; Lag Sequential Analysis  -  classical  (lag 1, directed)</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="co">#&gt;   3 states | 1734 transitions | 1870 events | 136 sequences</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="co">#&gt;   states: Active, Average, Disengaged</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="co">#&gt;   independence: G² = 618.3, df = 4, p &lt;2e-16</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="co">#&gt;   Significant transitions (p &lt; 0.05): 7 of 9</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="co">#&gt;   strongest over-represented (of 3):</span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="co">#&gt;     Active -&gt; Active          z =  +21.7  ***</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="co">#&gt;     Disengaged -&gt; Disengaged  z =  +15.4  ***</span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="co">#&gt;     Average -&gt; Average        z =  +12.5  ***</span></span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="co">#&gt;   Initial states:</span></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a><span class="co">#&gt;     Active     0.382  ████████████████████████</span></span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="co">#&gt;     Average    0.368  ███████████████████████</span></span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="co">#&gt;     Disengaged 0.250  ████████████████</span></span></code></pre></div>
+<p>The model counts 1734 transitions among 1870 events in 136 sequences.
+The omnibus likelihood-ratio test of independence is <span class="math inline">\(G^2 = 618.3\)</span> on 4 degrees of freedom, so
+the next week’s state depends strongly on the current one. Seven of the
+nine transitions depart from independence, and the three strongest
+over-represented transitions are the three self-transitions.</p>
+</div>
+<div id="which-transitions-depart-from-chance" class="section level2">
+<h2>Which transitions depart from chance</h2>
+<p><code>transitions()</code> returns one row per ordered pair with the
+observed and expected counts, the transitional probability
+(<code>prob</code>), the adjusted residual (<code>adj_res</code>), its
+p-value, Yule’s Q, and further association measures. The argument
+<code>significant = TRUE</code> keeps the transitions whose p-value is
+below <code>alpha</code>, and <code>sort = &quot;strength&quot;</code> orders them
+by the absolute residual.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">transitions</span>(fit, <span class="at">significant =</span> <span class="cn">TRUE</span>, <span class="at">sort =</span> <span class="st">&quot;strength&quot;</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co">#&gt;         from         to lag count expected  prob prob_col adj_res         p yules_q</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co">#&gt; 1     Active     Active   1   459      247 0.698   0.7051    21.7 4.60e-104   0.828</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co">#&gt; 2 Disengaged Disengaged   1   157       60 0.483   0.4906    15.4  1.90e-53   0.754</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co">#&gt; 3    Average     Active   1   153      282 0.204   0.2350   -12.9  4.16e-38  -0.601</span></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#&gt; 4     Active Disengaged   1    23      121 0.035   0.0719   -12.6  3.64e-36  -0.826</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#&gt; 5    Average    Average   1   458      330 0.610   0.6003    12.5  1.35e-35   0.553</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt; 6     Active    Average   1   176      290 0.267   0.2307   -11.3  1.06e-29  -0.534</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt; 7 Disengaged     Active   1    39      122 0.120   0.0599   -10.5  5.11e-26  -0.698</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt;    kappa kappa_z  kappa_p  lift  sign significant</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt; 1  0.444   19.19 4.68e-82 1.858  over        TRUE</span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt; 2  0.314   13.56 7.34e-42 2.618  over        TRUE</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt; 3 -0.499  -14.70 6.81e-49 0.543 under        TRUE</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt; 4 -0.827  -13.41 5.14e-41 0.189 under        TRUE</span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; 5  0.227    9.83 7.97e-23 1.386  over        TRUE</span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt; 6 -0.424  -12.48 9.39e-36 0.608 under        TRUE</span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt; 7 -0.707  -11.46 2.03e-30 0.320 under        TRUE</span></span></code></pre></div>
+<p><code>Active -&gt; Active</code> is the strongest regularity: it
+occurred 459 times against 247 expected, an adjusted residual of 21.7
+and a Yule’s Q of 0.828. Active students therefore stay active from one
+week to the next far more often than the base rate of activity predicts.
+<code>Disengaged -&gt; Disengaged</code> (z = 15.4, Q = 0.754) and
+<code>Average -&gt; Average</code> (z = 12.5, Q = 0.553) are the other
+two persistences, so every state tends to repeat. The avoidances are as
+informative. <code>Active -&gt; Disengaged</code> occurred 23 times
+against 121 expected (z = -12.6, Q = -0.826): an active student almost
+never drops to disengagement in a single week.
+<code>Disengaged -&gt; Active</code> is also avoided (z = -10.5, Q =
+-0.698), so recovery from disengagement to full activity is rare. Moves
+between <code>Average</code> and <code>Disengaged</code>, by contrast,
+occur at the rate the base rates predict.</p>
+<p>The two transitions missing from this table,
+<code>Average -&gt; Disengaged</code> and
+<code>Disengaged -&gt; Average</code>, are the ones that occur at the
+rate chance predicts. <code>direction = &quot;over&quot;</code> or
+<code>direction = &quot;under&quot;</code> keeps only one sign, and
+<code>min_count</code> drops pairs with few observations.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">transitions</span>(fit, <span class="at">direction =</span> <span class="st">&quot;under&quot;</span>, <span class="at">sort =</span> <span class="st">&quot;strength&quot;</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="co">#&gt;         from         to lag count expected  prob prob_col adj_res        p yules_q  kappa</span></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="co">#&gt; 1    Average     Active   1   153      282 0.204   0.2350   -12.9 4.16e-38  -0.601 -0.499</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt; 2     Active Disengaged   1    23      121 0.035   0.0719   -12.6 3.64e-36  -0.826 -0.827</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co">#&gt; 3     Active    Average   1   176      290 0.267   0.2307   -11.3 1.06e-29  -0.534 -0.424</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt; 4 Disengaged     Active   1    39      122 0.120   0.0599   -10.5 5.11e-26  -0.698 -0.707</span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt;   kappa_z  kappa_p  lift  sign significant</span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#&gt; 1   -14.7 6.81e-49 0.543 under        TRUE</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co">#&gt; 2   -13.4 5.14e-41 0.189 under        TRUE</span></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt; 3   -12.5 9.39e-36 0.608 under        TRUE</span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt; 4   -11.5 2.03e-30 0.320 under        TRUE</span></span></code></pre></div>
+<p>Four transitions are significantly avoided, and all four connect
+<code>Active</code> with another state, in either direction. Active
+engagement is therefore a closed state: students who hold it keep it,
+and students outside it rarely reach it in one week
+(<code>Average -&gt; Active</code>, z = -12.9).</p>
+</div>
+<div id="is-the-table-as-a-whole-dependent" class="section level2">
+<h2>Is the table as a whole dependent</h2>
+<p><code>tests()</code> returns the omnibus tests of independence for
+the whole table: the likelihood-ratio statistic (<code>lrx2</code>) and
+Pearson’s chi-squared (<code>x2</code>).</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">tests</span>(fit)</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co">#&gt;   test statistic df         p</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt; 1 lrx2       618  4 1.69e-132</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt; 2   x2       629  4 7.41e-135</span></span></code></pre></div>
+<p>Both statistics reject independence (<span class="math inline">\(G^2
+= 618\)</span> and <span class="math inline">\(\chi^2 = 629\)</span> on
+4 degrees of freedom, p far below 0.001). A non-significant omnibus test
+would give no basis for interpreting individual residuals, so this test
+is read before the transitions.</p>
+</div>
+<div id="states-and-starting-points" class="section level2">
+<h2>States and starting points</h2>
+<p><code>nodes()</code> returns one row per state with the number of
+transitions it sends and receives, and <code>initial()</code> the share
+of sequences that start in each state.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">nodes</span>(fit)</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="co">#&gt;        state outgoing incoming</span></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="co">#&gt; 1     Active      658      651</span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co">#&gt; 2    Average      751      763</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co">#&gt; 3 Disengaged      325      320</span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="fu">initial</span>(fit)</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co">#&gt;        state init_prob</span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt; 1     Active     0.382</span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt; 2    Average     0.368</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt; 3 Disengaged     0.250</span></span></code></pre></div>
+<p><code>Average</code> is the busiest state (751 outgoing, 763 incoming
+transitions) and <code>Disengaged</code> the least visited (325 and
+320). These totals are what the expected counts control for:
+<code>Average</code> is not credited with regularities on the strength
+of its volume. Sequences start in <code>Active</code> (0.382) and
+<code>Average</code> (0.368) more often than in <code>Disengaged</code>
+(0.250).</p>
+</div>
+<div id="a-summary-of-the-model" class="section level2">
+<h2>A summary of the model</h2>
+<p><code>summary()</code> returns a summary object. Printed, it gives
+the model in a few lines; its tables are read with
+<code>as.data.frame()</code>.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>fit_summary <span class="ot">&lt;-</span> <span class="fu">summary</span>(fit)</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>fit_summary</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="co">#&gt; Lag sequential analysis: classical engine, lag 1</span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="co">#&gt;   3 states, 1734 transitions, 1870 events, 136 sequences</span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="co">#&gt;   significant transitions (p &lt; 0.05): 7 of 9</span></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co">#&gt;   likelihood-ratio test: G² = 618.31, df = 4, p &lt;2e-16</span></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="co">#&gt;   Pearson test: χ² = 629.20, df = 4, p &lt;2e-16</span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt;   State activity (share of transitions out and in):</span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co">#&gt;     Active      out 0.379 ██████████    in 0.375 ██████████</span></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="co">#&gt;     Average     out 0.433 ████████████  in 0.440 ████████████</span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="co">#&gt;     Disengaged  out 0.187 █████         in 0.185 █████</span></span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="fu">as.data.frame</span>(fit_summary)</span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="co">#&gt;      engine lag n_states n_sequences n_events n_transitions n_significant alpha lrx2</span></span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="co">#&gt; 1 classical   1        3         136     1870          1734             7  0.05  618</span></span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a><span class="co">#&gt;   lrx2_df    lrx2_p  x2 x2_df      x2_p</span></span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a><span class="co">#&gt; 1       4 1.69e-132 629     4 7.41e-135</span></span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a><span class="fu">as.data.frame</span>(fit_summary, <span class="at">what =</span> <span class="st">&quot;nodes&quot;</span>)</span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a><span class="co">#&gt;        state outgoing incoming out_share in_share init_prob</span></span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a><span class="co">#&gt; 1     Active      658      651     0.379    0.375     0.382</span></span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="co">#&gt; 2    Average      751      763     0.433    0.440     0.368</span></span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a><span class="co">#&gt; 3 Disengaged      325      320     0.187    0.185     0.250</span></span></code></pre></div>
+<p>The overview table is one row with the dimensions and omnibus tests
+of the model, the form to collect when several models are fitted. The
+node table adds the shares of outgoing and incoming transitions and the
+initial probability for each state: <code>Average</code> carries 43.3%
+of the outgoing transitions and <code>Disengaged</code> 18.7%.</p>
+</div>
+<div id="transition-probabilities" class="section level2">
+<h2>Transition probabilities</h2>
+<p><code>transition_probabilities()</code> returns the transitional
+probabilities <span class="math inline">\(P(\text{to} \mid
+\text{from})\)</span> as a tidy table, one row per ordered pair. They
+are the edge weights of a transition network analysis model and the
+input that probability-based tools expect.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="fu">transition_probabilities</span>(fit)</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a><span class="co">#&gt;         from         to  prob</span></span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="co">#&gt; 1     Active     Active 0.698</span></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a><span class="co">#&gt; 2     Active    Average 0.267</span></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a><span class="co">#&gt; 3     Active Disengaged 0.035</span></span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a><span class="co">#&gt; 4    Average     Active 0.204</span></span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a><span class="co">#&gt; 5    Average    Average 0.610</span></span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a><span class="co">#&gt; 6    Average Disengaged 0.186</span></span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a><span class="co">#&gt; 7 Disengaged     Active 0.120</span></span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a><span class="co">#&gt; 8 Disengaged    Average 0.397</span></span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="co">#&gt; 9 Disengaged Disengaged 0.483</span></span></code></pre></div>
+<p>Each state is most often followed by itself: 0.698 for
+<code>Active</code>, 0.610 for <code>Average</code>, and 0.483 for
+<code>Disengaged</code>. The probabilities and the residuals answer
+different questions. <code>Disengaged -&gt; Average</code> has a
+probability of 0.397, the second largest move out of
+<code>Disengaged</code>, yet its residual (-1.7) is not significant: the
+move is frequent because <code>Average</code> is a busy state, not
+because disengaged students are drawn to it.</p>
+</div>
+<div id="residual-heatmap" class="section level2">
+<h2>Residual heatmap</h2>
+<p><code>plot()</code> draws a residual heatmap by default. Rows are the
+current states, columns the next states, and the fill is the adjusted
+residual on a diverging scale.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="fu">plot</span>(fit)</span></code></pre></div>
+<p><img src="data:image/png;base64,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" alt style="display: block; margin: auto;" /></p>
+<p>The heatmap shows the structure of the model at a glance: the
+diagonal is uniformly over-represented, the four off-diagonal cells in
+the <code>Active</code> row and column are avoided, and the two cells
+linking <code>Average</code> and <code>Disengaged</code> sit near zero.
+The process is one of persistence, with movement mostly confined to the
+two lower states.</p>
+</div>
+<div id="where-next" class="section level2">
+<h2>Where next</h2>
+<ul>
+<li><a href="https://pak.dynasite.org/lagdynamics/articles/lag-transition-networks.html">Lag
+transition networks</a>: the fitted model drawn as a residual, Yule’s Q,
+or probability network.</li>
+<li><a href="https://pak.dynasite.org/lagdynamics/articles/confirmatory.html">Evaluating
+transitions</a>: edge uncertainty, case-drop stability, split-half
+reliability, and a permutation null.</li>
+<li><a href="https://pak.dynasite.org/lagdynamics/articles/group-comparison.html">Comparing
+groups</a>: grouped fits and permutation and Bayesian tests of group
+differences.</li>
+<li><a href="https://pak.dynasite.org/lagdynamics/articles/workflow.html">Workflow</a>,
+<a href="https://pak.dynasite.org/lagdynamics/articles/event-logs.html">event
+logs</a>, <a href="https://pak.dynasite.org/lagdynamics/articles/engines.html">engines</a>,
+<a href="https://pak.dynasite.org/lagdynamics/articles/lags-structural-zeros.html">lags
+and structural zeros</a>, and <a href="https://pak.dynasite.org/lagdynamics/articles/plotting.html">plotting</a>:
+the guides to each part of the package.</li>
+</ul>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<p>Bakeman, R., &amp; Gottman, J. M. (1997). <em>Observing interaction:
+An introduction to sequential analysis</em> (2nd ed.). Cambridge
+University Press.</p>
+<p>Bakeman, R., &amp; Quera, V. (2011). <em>Sequential analysis and
+observational methods for the behavioral sciences</em>. Cambridge
+University Press.</p>
+<p>Haberman, S. J. (1973). The analysis of residuals in cross-classified
+tables. <em>Biometrics, 29</em>, 205-220.</p>
+<p>Sackett, G. P. (1979). The lag sequential analysis of contingency and
+cyclicity in behavioral interaction research. In J. D. Osofsky (Ed.),
+<em>Handbook of infant development</em> (pp. 623-649). Wiley.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

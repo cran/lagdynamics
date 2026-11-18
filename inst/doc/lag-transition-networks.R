@@ -1,68 +1,49 @@
-## ----setup, include = FALSE---------------------------------------------------
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>", message = FALSE,
-                      warning = FALSE, dpi = 150, fig.width = 7,
-                      fig.height = 5.4, out.width = "100%",
-                      fig.align = "center")
-set.seed(2026)
-library(lagdynamics)
-old_options <- options(digits = 3)
-has_cograph <- requireNamespace("cograph", quietly = TRUE)
+## ----options, include = FALSE-----------------------------------------------------------
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 6.5,
+                      fig.height = 5, fig.align = "center", dpi = 72)
+old_options <- options(digits = 3, width = 90)
 
-## ----data---------------------------------------------------------------------
-data(ai_long)
+## ----data-------------------------------------------------------------------------------
+library(lagdynamics)
 head(ai_long)
 
-## ----fit----------------------------------------------------------------------
+## ----fit--------------------------------------------------------------------------------
 fit <- lsa(ai_long,
            session = "session_id",
            action  = "code",
            order   = "order_in_session")
 fit
 
-## ----initial------------------------------------------------------------------
+## ----initial----------------------------------------------------------------------------
 initial(fit)
 
-## ----nodes--------------------------------------------------------------------
+## ----nodes------------------------------------------------------------------------------
 nodes(fit)
 
-## ----tests--------------------------------------------------------------------
+## ----tests------------------------------------------------------------------------------
 tests(fit)
 
-## ----over---------------------------------------------------------------------
+## ----over-------------------------------------------------------------------------------
 transitions(fit, direction = "over", sort = "strength")
 
-## ----under--------------------------------------------------------------------
+## ----under------------------------------------------------------------------------------
 transitions(fit, direction = "under", sort = "strength")
 
-## ----net-residual-full, eval = has_cograph------------------------------------
-plot_transitions(fit, weights = "residuals", decimals = 1)
-
-## ----net-residual-full-skip, echo = FALSE, eval = !has_cograph----------------
-# message("Install 'cograph' to draw the residual network.")
-
-## ----net-residual-top, eval = has_cograph-------------------------------------
+## ----net-residual-----------------------------------------------------------------------
 plot_transitions(fit, weights = "residuals", top = 12, decimals = 1)
 
-## ----net-yulesq-full, eval = has_cograph--------------------------------------
-plot_transitions(fit, weights = "yules_q", decimals = 2)
-
-## ----net-yulesq-full-skip, echo = FALSE, eval = !has_cograph------------------
-# message("Install 'cograph' to draw the Yule's Q network.")
-
-## ----net-yulesq-top, eval = has_cograph---------------------------------------
+## ----net-yulesq-------------------------------------------------------------------------
 plot_transitions(fit, weights = "yules_q", top = 12, decimals = 2)
 
-## ----net-prob, eval = has_cograph---------------------------------------------
+## ----net-prob---------------------------------------------------------------------------
 plot_transitions(fit, weights = "tna")
 
-## ----net-prob-skip, echo = FALSE, eval = !has_cograph-------------------------
-# message("Install 'cograph' to draw the probability network.")
-
-## ----bootstrap----------------------------------------------------------------
-boot <- bootstrap_lsa(fit, R = 1000)
+## ----bootstrap--------------------------------------------------------------------------
+set.seed(2026)
+boot <- bootstrap_lsa(fit, R = 500)
 boot
 
-## ----certainty----------------------------------------------------------------
+## ----certainty--------------------------------------------------------------------------
 cert <- certainty_lsa(fit)
 cert
 
